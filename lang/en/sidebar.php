@@ -5,6 +5,8 @@ return [
 
     'dashboard' => 'Dashboard',
 
+    'users' => 'Users',
+
     'documentation' => 'Documentation',
 
     'settings' => 'Settings',

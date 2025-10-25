@@ -12,9 +12,10 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import * as usersRoutes from '@/routes/users';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid } from 'lucide-vue-next';
+import { BookOpen, Folder, LayoutGrid, Users } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 import { wTrans } from 'laravel-vue-i18n';
 
@@ -23,6 +24,11 @@ const mainNavItems: NavItem[] = [
         title: wTrans('sidebar.dashboard'),
         href: dashboard(),
         icon: LayoutGrid,
+    },
+    {
+        title: wTrans('sidebar.users'),
+        href: usersRoutes.index(),
+        icon: Users,
     },
 ];
 

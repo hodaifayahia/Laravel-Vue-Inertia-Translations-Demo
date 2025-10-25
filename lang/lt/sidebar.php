@@ -5,6 +5,8 @@ return [
 
     'dashboard' => 'Prietaisų skydelis',
 
+    'users' => 'Vartotojai',
+
     'documentation' => 'Dokumentacija',
 
     'settings' => 'Nustatymai',
