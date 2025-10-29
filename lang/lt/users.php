@@ -28,6 +28,9 @@ return [
     'password_confirmation' => 'Patvirtinti slaptažodį',
     'language' => 'Kalba',
     'locale' => 'Kalba',
+    'roles' => 'Rolės',
+    'assign_roles' => 'Priskirti roles',
+    'roles_description' => 'Pasirinkite vieną ar daugiau rolių, kurias norite priskirti šiam vartotojui',
     
     // Placeholders
     'name_placeholder' => 'Įveskite pilną vardą',
@@ -62,6 +65,8 @@ return [
     'deleted_successfully' => 'Vartotojas sėkmingai ištrintas',
     'cannot_delete_yourself' => 'Negalite ištrinti savęs',
     'leave_blank_to_keep' => 'Palikite tuščią, kad išsaugotumėte dabartinį slaptažodį',
+    'roles_updated' => 'Vartotojo rolės sėkmingai atnaujintos',
+    'permissions_updated' => 'Vartotojo leidimai sėkmingai atnaujinti',
     
     // Descriptions
     'create_user_description' => 'Pridėti naują vartotoją į sistemą su jų duomenimis',

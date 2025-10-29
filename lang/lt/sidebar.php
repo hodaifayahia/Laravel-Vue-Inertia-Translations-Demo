@@ -6,6 +6,8 @@ return [
     'dashboard' => 'Prietaisų skydelis',
 
     'users' => 'Vartotojai',
+    'roles' => 'Rolės',
+    'permissions' => 'Leidimai',
 
     'documentation' => 'Dokumentacija',
 

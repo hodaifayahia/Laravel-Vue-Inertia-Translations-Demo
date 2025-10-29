@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
+use Spatie\Permission\Models\Role;
 
 class UserManagementController extends Controller
 {
@@ -17,7 +18,7 @@ class UserManagementController extends Controller
      */
     public function index(Request $request): Response
     {
-        $query = User::query();
+        $query = User::query()->with('roles');
 
         // Search functionality
         if ($request->has('search') && $request->search !== null) {
@@ -43,10 +44,12 @@ class UserManagementController extends Controller
         $query->orderBy($sortBy, $sortDirection);
 
         $users = $query->paginate(10)->withQueryString();
+        $roles = Role::all();
 
         return Inertia::render('UserManagement/Index', [
             'users' => $users,
             'filters' => $request->only(['search', 'verified', 'sort_by', 'sort_direction']),
+            'roles' => $roles,
         ]);
     }
 
@@ -55,7 +58,10 @@ class UserManagementController extends Controller
      */
     public function create(): Response
     {
-        return Inertia::render('UserManagement/Create');
+        $roles = Role::all();
+        return Inertia::render('UserManagement/Create', [
+            'roles' => $roles,
+        ]);
     }
 
     /**
@@ -65,12 +71,18 @@ class UserManagementController extends Controller
     {
         $validated = $request->validated();
         
-        User::create([
+        $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => bcrypt($validated['password']),
             'locale' => $validated['locale'] ?? 'en',
         ]);
+
+        // Assign roles if provided
+        if (!empty($validated['roles'])) {
+            $roleNames = Role::whereIn('id', $validated['roles'])->pluck('name')->toArray();
+            $user->assignRole($roleNames);
+        }
 
         return redirect()->route('users.index')
             ->with('success', __('users.created_successfully'));
@@ -81,6 +93,7 @@ class UserManagementController extends Controller
      */
     public function show(User $user): Response
     {
+        $user->load('roles.permissions');
         return Inertia::render('UserManagement/Show', [
             'user' => $user,
         ]);
@@ -91,8 +104,11 @@ class UserManagementController extends Controller
      */
     public function edit(User $user): Response
     {
+        $user->load('roles');
+        $roles = Role::all();
         return Inertia::render('UserManagement/Edit', [
             'user' => $user,
+            'roles' => $roles,
         ]);
     }
 

@@ -44,6 +44,7 @@ import * as usersRoutes from '@/routes/users';
 
 interface UserData extends User {
     locale: string;
+    roles?: Array<{ id: number; name: string }>;
 }
 
 interface Props {
@@ -61,13 +62,14 @@ interface Props {
         sort_by?: string;
         sort_direction?: string;
     };
+    roles?: Array<{ id: number; name: string }>;
 }
 
 const props = defineProps<Props>();
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: computed(() => wTrans('users.title')),
+        title: wTrans('users.title'),
         href: usersRoutes.index().url,
     },
 ];
@@ -374,11 +376,12 @@ const getLocaleLabel = (locale: string) => {
         </div>
 
         <!-- Dialogs -->
-        <CreateUserDialog v-model:open="createDialogOpen" />
+        <CreateUserDialog v-model:open="createDialogOpen" :roles="roles" />
         <EditUserDialog
             v-if="selectedUser"
             v-model:open="editDialogOpen"
             :user="selectedUser"
+            :roles="roles"
         />
         <DeleteUserDialog
             v-if="selectedUser"

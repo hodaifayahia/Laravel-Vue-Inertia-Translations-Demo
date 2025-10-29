@@ -9,20 +9,27 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useForm } from '@inertiajs/vue3';
-import { watch } from 'vue';
+import { Badge } from '@/components/ui/badge';
+import { useForm, router } from '@inertiajs/vue3';
+import { watch, ref } from 'vue';
 import InputError from '@/components/InputError.vue';
 import type { User } from '@/types';
 import * as usersRoutes from '@/routes/users';
 
+interface Role {
+    id: number;
+    name: string;
+}
+
 interface UserData extends User {
     locale: string;
+    roles?: Role[];
 }
 
 const props = defineProps<{
     open: boolean;
     user: UserData;
+    roles?: Role[];
 }>();
 
 const emit = defineEmits<{
@@ -37,10 +44,21 @@ const form = useForm({
     locale: props.user.locale || 'en',
 });
 
+const selectedRoleIds = ref<number[]>(props.user.roles?.map((r) => r.id) || []);
+
 const submit = () => {
     form.put(usersRoutes.update(props.user.id).url, {
         preserveScroll: true,
         onSuccess: () => {
+            // Update roles separately
+            if (props.roles) {
+                router.post(
+                    `/users/${props.user.id}/assign-roles`,
+                    { roles: selectedRoleIds.value },
+                    { preserveScroll: true }
+                );
+            }
+            
             emit('update:open', false);
             form.reset('password', 'password_confirmation');
         },
@@ -59,6 +77,7 @@ watch(
             form.name = props.user.name;
             form.email = props.user.email;
             form.locale = props.user.locale || 'en';
+            selectedRoleIds.value = props.user.roles?.map((r) => r.id) || [];
         }
     }
 );
@@ -76,7 +95,9 @@ watch(
 
             <form @submit.prevent="submit" class="space-y-4">
                 <div class="space-y-2">
-                    <Label for="edit-name">{{ $t('users.name') }}</Label>
+                    <label for="edit-name" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        {{ $t('users.name') }}
+                    </label>
                     <Input
                         id="edit-name"
                         v-model="form.name"
@@ -89,7 +110,9 @@ watch(
                 </div>
 
                 <div class="space-y-2">
-                    <Label for="edit-email">{{ $t('users.email') }}</Label>
+                    <label for="edit-email" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        {{ $t('users.email') }}
+                    </label>
                     <Input
                         id="edit-email"
                         v-model="form.email"
@@ -101,12 +124,12 @@ watch(
                 </div>
 
                 <div class="space-y-2">
-                    <Label for="edit-password">
+                    <label for="edit-password" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                         {{ $t('users.password') }}
                         <span class="text-muted-foreground text-xs ml-1">
                             ({{ $t('users.leave_blank_to_keep') }})
                         </span>
-                    </Label>
+                    </label>
                     <Input
                         id="edit-password"
                         v-model="form.password"
@@ -117,9 +140,9 @@ watch(
                 </div>
 
                 <div class="space-y-2">
-                    <Label for="edit-password_confirmation">{{
-                        $t('users.password_confirmation')
-                    }}</Label>
+                    <label for="edit-password_confirmation" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        {{ $t('users.password_confirmation') }}
+                    </label>
                     <Input
                         id="edit-password_confirmation"
                         v-model="form.password_confirmation"
@@ -130,7 +153,9 @@ watch(
                 </div>
 
                 <div class="space-y-2">
-                    <Label for="edit-locale">{{ $t('users.language') }}</Label>
+                    <label for="edit-locale" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        {{ $t('users.language') }}
+                    </label>
                     <select
                         id="edit-locale"
                         v-model="form.locale"
@@ -140,6 +165,45 @@ watch(
                         <option value="lt">Lietuvių</option>
                     </select>
                     <InputError :message="form.errors.locale" />
+                </div>
+
+                <!-- Roles Section -->
+                <div v-if="roles && roles.length > 0" class="space-y-2">
+                    <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        {{ $t('users.roles') }}
+                    </label>
+                    <div class="grid grid-cols-2 gap-3 rounded-md border p-4 max-h-48 overflow-y-auto">
+                        <label
+                            v-for="role in roles"
+                            :key="role.id"
+                            :for="`edit-role-${role.id}`"
+                            class="flex items-center space-x-2 cursor-pointer hover:bg-accent/50 rounded p-2 -m-2"
+                        >
+                            <input
+                                type="checkbox"
+                                :id="`edit-role-${role.id}`"
+                                :value="role.id"
+                                v-model="selectedRoleIds"
+                                class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 cursor-pointer"
+                            />
+                            <span class="text-sm select-none">
+                                {{ role.name }}
+                            </span>
+                        </label>
+                    </div>
+                    <div v-if="selectedRoleIds.length > 0" class="flex flex-wrap gap-1 mt-2">
+                        <Badge
+                            v-for="roleId in selectedRoleIds"
+                            :key="roleId"
+                            variant="secondary"
+                            class="text-xs"
+                        >
+                            {{ roles.find((r: Role) => r.id === roleId)?.name }}
+                        </Badge>
+                    </div>
+                    <p class="text-xs text-muted-foreground">
+                        {{ $t('users.roles_description') }}
+                    </p>
                 </div>
 
                 <DialogFooter>

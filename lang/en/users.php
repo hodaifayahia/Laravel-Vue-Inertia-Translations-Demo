@@ -28,6 +28,9 @@ return [
     'password_confirmation' => 'Confirm Password',
     'language' => 'Language',
     'locale' => 'Language',
+    'roles' => 'Roles',
+    'assign_roles' => 'Assign Roles',
+    'roles_description' => 'Select one or more roles to assign to this user',
     
     // Placeholders
     'name_placeholder' => 'Enter full name',
@@ -62,6 +65,8 @@ return [
     'deleted_successfully' => 'User deleted successfully',
     'cannot_delete_yourself' => 'You cannot delete yourself',
     'leave_blank_to_keep' => 'Leave blank to keep current password',
+    'roles_updated' => 'User roles updated successfully',
+    'permissions_updated' => 'User permissions updated successfully',
     
     // Descriptions
     'create_user_description' => 'Add a new user to the system with their details',
