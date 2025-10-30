@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Settings\CustomizationController;
 use App\Http\Controllers\Settings\PasswordController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\SetLocaleController;
@@ -26,6 +27,17 @@ Route::middleware('auth')->group(function () {
 
     Route::get('settings/two-factor', [TwoFactorAuthenticationController::class, 'show'])
         ->name('two-factor.show');
+
+    Route::get('settings/customization', [CustomizationController::class, 'edit'])
+        ->name('customization.edit');
+    Route::post('settings/customization/welcome', [CustomizationController::class, 'updateWelcome'])
+        ->name('customization.welcome.update');
+    Route::post('settings/customization/theme', [CustomizationController::class, 'updateTheme'])
+        ->name('customization.theme.update');
+    Route::post('settings/customization/branding', [CustomizationController::class, 'updateBranding'])
+        ->name('customization.branding.update');
+    Route::post('settings/customization/reset', [CustomizationController::class, 'reset'])
+        ->name('customization.reset');
 
     Route::put('settings/locale', SetLocaleController::class);
 });

@@ -127,6 +127,8 @@ const formatDate = (dateString: string) => {
 const getLocaleLabel = (locale: string) => {
     const labels: Record<string, string> = {
         en: 'English',
+        fr: 'Français',
+        ar: 'العربية',
         lt: 'Lietuvių',
     };
     return labels[locale] || locale;
@@ -238,6 +240,7 @@ const getLocaleLabel = (locale: string) => {
                                 <tr>
                                     <th class="px-6 py-3">{{ $t('users.user') }}</th>
                                     <th class="px-6 py-3">{{ $t('users.email') }}</th>
+                                    <th class="px-6 py-3">{{ $t('users.roles') }}</th>
                                     <th class="px-6 py-3">{{ $t('users.status') }}</th>
                                     <th class="px-6 py-3">{{ $t('users.locale') }}</th>
                                     <th class="px-6 py-3">{{ $t('users.joined') }}</th>
@@ -264,6 +267,21 @@ const getLocaleLabel = (locale: string) => {
                                         <div class="flex items-center gap-2 text-muted-foreground">
                                             <Mail class="h-4 w-4" />
                                             {{ user.email }}
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex flex-wrap gap-1">
+                                            <Badge
+                                                v-for="role in user.roles"
+                                                :key="role.id"
+                                                variant="secondary"
+                                                class="text-xs"
+                                            >
+                                                {{ role.name }}
+                                            </Badge>
+                                            <Badge v-if="!user.roles || user.roles.length === 0" variant="outline" class="text-xs">
+                                                No roles
+                                            </Badge>
                                         </div>
                                     </td>
                                     <td class="px-6 py-4">

@@ -12,6 +12,7 @@ import { BreadcrumbItem } from '@/types';
 import { Form, Head } from '@inertiajs/vue3';
 import { ShieldBan, ShieldCheck } from 'lucide-vue-next';
 import { onUnmounted, ref } from 'vue';
+import { wTrans } from 'laravel-vue-i18n';
 
 interface Props {
     requiresConfirmation?: boolean;
@@ -25,7 +26,7 @@ withDefaults(defineProps<Props>(), {
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Two-Factor Authentication',
+        title: wTrans('settings.two_factor.title'),
         href: show.url(),
     },
 ];
@@ -40,25 +41,22 @@ onUnmounted(() => {
 
 <template>
     <AppLayout :breadcrumbs="breadcrumbs">
-        <Head title="Two-Factor Authentication" />
+        <Head :title="$t('settings.two_factor.title')" />
         <SettingsLayout>
             <div class="space-y-6">
                 <HeadingSmall
-                    title="Two-Factor Authentication"
-                    description="Manage your two-factor authentication settings"
+                    :title="$t('settings.two_factor.heading')"
+                    :description="$t('settings.two_factor.description')"
                 />
 
                 <div
                     v-if="!twoFactorEnabled"
                     class="flex flex-col items-start justify-start space-y-4"
                 >
-                    <Badge variant="destructive">Disabled</Badge>
+                    <Badge variant="destructive">{{ $t('settings.two_factor.disabled') }}</Badge>
 
                     <p class="text-muted-foreground">
-                        When you enable two-factor authentication, you will be
-                        prompted for a secure pin during login. This pin can be
-                        retrieved from a TOTP-supported application on your
-                        phone.
+                        {{ $t('settings.two_factor.disabled_description') }}
                     </p>
 
                     <div>
@@ -66,7 +64,7 @@ onUnmounted(() => {
                             v-if="hasSetupData"
                             @click="showSetupModal = true"
                         >
-                            <ShieldCheck />Continue Setup
+                            <ShieldCheck />{{ $t('settings.two_factor.continue_setup') }}
                         </Button>
                         <Form
                             v-else
@@ -75,7 +73,7 @@ onUnmounted(() => {
                             #default="{ processing }"
                         >
                             <Button type="submit" :disabled="processing">
-                                <ShieldCheck />Enable 2FA</Button
+                                <ShieldCheck />{{ $t('settings.two_factor.enable') }}</Button
                             ></Form
                         >
                     </div>
@@ -85,13 +83,10 @@ onUnmounted(() => {
                     v-else
                     class="flex flex-col items-start justify-start space-y-4"
                 >
-                    <Badge variant="default">Enabled</Badge>
+                    <Badge variant="default">{{ $t('settings.two_factor.enabled') }}</Badge>
 
                     <p class="text-muted-foreground">
-                        With two-factor authentication enabled, you will be
-                        prompted for a secure, random pin during login, which
-                        you can retrieve from the TOTP-supported application on
-                        your phone.
+                        {{ $t('settings.two_factor.enabled_description') }}
                     </p>
 
                     <TwoFactorRecoveryCodes />
@@ -104,7 +99,7 @@ onUnmounted(() => {
                                 :disabled="processing"
                             >
                                 <ShieldBan />
-                                Disable 2FA
+                                {{ $t('settings.two_factor.disable') }}
                             </Button>
                         </Form>
                     </div>

@@ -68,15 +68,16 @@ watch(
 
 <template>
     <Dialog :open="open" @update:open="emit('update:open', $event)">
-        <DialogContent class="sm:max-w-[500px]">
-            <DialogHeader>
+        <DialogContent class="sm:max-w-[600px] max-h-[90vh] flex flex-col">
+            <DialogHeader class="flex-shrink-0">
                 <DialogTitle>{{ $t('users.create_user') }}</DialogTitle>
                 <DialogDescription>
                     {{ $t('users.create_user_description') }}
                 </DialogDescription>
             </DialogHeader>
 
-            <form @submit.prevent="submit" class="space-y-4">
+            <form @submit.prevent="submit" class="flex flex-col flex-1 overflow-hidden">
+                <div class="space-y-4 overflow-y-auto pr-2 flex-1">
                 <div class="space-y-2">
                     <label for="name" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                         {{ $t('users.name') }}
@@ -144,41 +145,44 @@ watch(
                         class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         <option value="en">English</option>
+                        <option value="fr">Français</option>
+                        <option value="ar">العربية</option>
                         <option value="lt">Lietuvių</option>
                     </select>
                     <InputError :message="form.errors.locale" />
                 </div>
 
-                <div v-if="roles && roles.length > 0" class="space-y-2">
-                    <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                        {{ $t('users.roles') }}
-                    </label>
-                    <div class="grid grid-cols-2 gap-3 rounded-md border p-4 max-h-48 overflow-y-auto">
-                        <label
-                            v-for="role in roles"
-                            :key="role.id"
-                            :for="`create-role-${role.id}`"
-                            class="flex items-center space-x-2 cursor-pointer hover:bg-accent/50 rounded p-2 -m-2"
-                        >
-                            <input
-                                type="checkbox"
-                                :id="`create-role-${role.id}`"
-                                :value="role.id"
-                                v-model="selectedRoleIds"
-                                class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 cursor-pointer"
-                            />
-                            <span class="text-sm select-none">
-                                {{ role.name }}
-                            </span>
+                    <div v-if="roles && roles.length > 0" class="space-y-2">
+                        <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                            {{ $t('users.roles') }}
                         </label>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 rounded-md border p-3 max-h-40 overflow-y-auto">
+                            <label
+                                v-for="role in roles"
+                                :key="role.id"
+                                :for="`create-role-${role.id}`"
+                                class="flex items-center space-x-2 cursor-pointer hover:bg-accent/50 rounded p-2"
+                            >
+                                <input
+                                    type="checkbox"
+                                    :id="`create-role-${role.id}`"
+                                    :value="role.id"
+                                    v-model="selectedRoleIds"
+                                    class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 cursor-pointer"
+                                />
+                                <span class="text-sm select-none">
+                                    {{ role.name }}
+                                </span>
+                            </label>
+                        </div>
+                        <p class="text-xs text-muted-foreground">
+                            {{ $t('users.roles_description') }}
+                        </p>
+                        <InputError :message="form.errors.roles" />
                     </div>
-                    <p class="text-xs text-muted-foreground">
-                        {{ $t('users.roles_description') }}
-                    </p>
-                    <InputError :message="form.errors.roles" />
                 </div>
 
-                <DialogFooter>
+                <DialogFooter class="flex-shrink-0 mt-4 pt-4 border-t">
                     <Button
                         type="button"
                         variant="outline"

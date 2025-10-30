@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import LocaleSelector from '@/components/LocaleSelector.vue';
 import ThemeToggle from '@/components/ThemeToggle.vue';
 import { dashboard, login, register } from '@/routes';
 import { Head, Link } from '@inertiajs/vue3';
@@ -41,7 +40,6 @@ import {
                 </div>
 
                 <div class="flex items-center gap-3">
-                    <LocaleSelector />
                     <ThemeToggle />
                     <Link
                         v-if="$page.props.auth.user"

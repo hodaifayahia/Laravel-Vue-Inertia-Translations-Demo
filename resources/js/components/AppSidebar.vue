@@ -20,6 +20,37 @@ import { Link } from '@inertiajs/vue3';
 import { BookOpen, Folder, LayoutGrid, Users, Shield, Key } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 import { wTrans } from 'laravel-vue-i18n';
+import { computed, ref, onMounted, onUnmounted } from 'vue';
+
+// Determine sidebar side based on language direction
+// Watch for changes in the HTML dir attribute which changes when language changes
+const documentDir = ref(document.documentElement.getAttribute('dir') || 'ltr');
+
+const sidebarSide = computed(() => documentDir.value === 'rtl' ? 'right' : 'left');
+
+// Watch for dir attribute changes using MutationObserver
+let observer: MutationObserver | null = null;
+
+onMounted(() => {
+    observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'dir') {
+                documentDir.value = document.documentElement.getAttribute('dir') || 'ltr';
+            }
+        });
+    });
+
+    observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['dir'],
+    });
+});
+
+onUnmounted(() => {
+    if (observer) {
+        observer.disconnect();
+    }
+});
 
 const mainNavItems: NavItem[] = [
     {
@@ -59,7 +90,7 @@ const footerNavItems: NavItem[] = [
 </script>
 
 <template>
-    <Sidebar collapsible="icon" variant="inset">
+    <Sidebar collapsible="icon" variant="inset" :side="sidebarSide">
         <SidebarHeader>
             <SidebarMenu>
                 <SidebarMenuItem>

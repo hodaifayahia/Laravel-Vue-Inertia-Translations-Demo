@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import RegisteredUserController from '@/actions/App/Http/Controllers/Auth/RegisteredUserController';
 import InputError from '@/components/InputError.vue';
+import LocaleSelector from '@/components/LocaleSelector.vue';
 import TextLink from '@/components/TextLink.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -54,6 +55,11 @@ const passwordStrength = computed(() => {
         :description="$t('auth.enter_details')"
     >
         <Head :title="$t('auth.register')" />
+
+        <!-- Language Selector -->
+        <div class="mb-4 flex justify-end">
+            <LocaleSelector />
+        </div>
 
         <Form
             v-bind="RegisteredUserController.store.form()"

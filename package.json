@@ -36,6 +36,7 @@
         "laravel-vite-plugin": "^2.0.0",
         "laravel-vue-i18n": "^2.8.0",
         "lucide-vue-next": "^0.534.0",
+        "radix-vue": "^1.9.17",
         "reka-ui": "^2.4.1",
         "tailwind-merge": "^3.2.0",
         "tailwindcss": "^4.1.1",

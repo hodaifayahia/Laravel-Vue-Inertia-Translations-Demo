@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AuthenticatedSessionController from '@/actions/App/Http/Controllers/Auth/AuthenticatedSessionController';
 import InputError from '@/components/InputError.vue';
+import LocaleSelector from '@/components/LocaleSelector.vue';
 import TextLink from '@/components/TextLink.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -31,6 +32,11 @@ const togglePasswordVisibility = () => {
         :description="$t('auth.enter_details_login')"
     >
         <Head :title="$t('auth.login')" />
+
+        <!-- Language Selector -->
+        <div class="mb-4 flex justify-end">
+            <LocaleSelector />
+        </div>
 
         <div
             v-if="status"
