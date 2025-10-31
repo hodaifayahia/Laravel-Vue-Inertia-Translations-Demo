@@ -24,3 +24,8 @@ declare module 'vue' {
         $headManager: ReturnType<typeof createHeadManager>;
     }
 }
+
+// Ziggy route helper
+declare global {
+    function route(name: string, params?: any): string;
+}

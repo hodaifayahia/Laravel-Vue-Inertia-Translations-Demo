@@ -17,7 +17,7 @@ import * as rolesRoutes from '@/routes/roles';
 import * as permissionsRoutes from '@/routes/permissions';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid, Users, Shield, Key } from 'lucide-vue-next';
+import { BookOpen, Folder, LayoutGrid, Users, Shield, Key, MessageCircle, Settings, Calendar, CalendarCheck, Stethoscope, Clock } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 import { wTrans } from 'laravel-vue-i18n';
 import { computed, ref, onMounted, onUnmounted } from 'vue';
@@ -65,6 +65,51 @@ const allNavItems = [
         permission: 'view dashboard sidebar',
     },
     {
+        title: wTrans('sidebar.chat'),
+        href: '/chat',
+        icon: MessageCircle,
+        permission: 'view chat',
+    },
+    {
+        title: wTrans('sidebar.bookings'),
+        icon: Calendar,
+        permission: 'can-book',
+        items: [
+            {
+                title: wTrans('sidebar.book_appointment'),
+                href: '/book',
+                icon: CalendarCheck,
+            },
+            {
+                title: wTrans('sidebar.my_appointments'),
+                href: '/appointments',
+                icon: Calendar,
+            },
+        ],
+    },
+    {
+        title: wTrans('sidebar.bookings'),
+        icon: Stethoscope,
+        permission: 'book-sys',
+        items: [
+            {
+                title: wTrans('sidebar.provider_profile'),
+                href: '/provider/profile',
+                icon: Stethoscope,
+            },
+            {
+                title: wTrans('sidebar.provider_schedule'),
+                href: '/provider/schedule',
+                icon: Clock,
+            },
+            {
+                title: wTrans('sidebar.my_appointments'),
+                href: '/appointments',
+                icon: Calendar,
+            },
+        ],
+    },
+    {
         title: wTrans('sidebar.users'),
         href: usersRoutes.index(),
         icon: Users,
@@ -81,6 +126,18 @@ const allNavItems = [
         href: permissionsRoutes.index(),
         icon: Key,
         permission: 'view permissions sidebar',
+    },
+    {
+        title: wTrans('sidebar.chat_permissions'),
+        href: '/chat/permission-settings',
+        icon: Settings,
+        permission: 'manage chat',
+    },
+    {
+        title: wTrans('sidebar.specializations'),
+        href: '/specializations',
+        icon: Stethoscope,
+        permission: 'manage bookings',
     },
 ];
 

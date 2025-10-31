@@ -63,7 +63,8 @@ const passwordStrength = computed(() => {
         </div>
 
         <Form
-            v-bind="RegisteredUserController.store.form()"
+            :action="RegisteredUserController.store.url()"
+            method="post"
             :reset-on-success="['password', 'password_confirmation']"
             v-slot="{ errors, processing }"
             class="space-y-6"

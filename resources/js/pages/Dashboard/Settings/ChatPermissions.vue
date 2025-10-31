@@ -1,0 +1,714 @@
+<script setup lang="ts">
+import { ref, computed } from 'vue'
+import { Head, router } from '@inertiajs/vue3'
+import AppLayout from '@/layouts/AppLayout.vue'
+import type { BreadcrumbItem } from '@/types'
+
+interface Role {
+  id: number
+  name: string
+  users_count: number
+}
+
+interface Permission {
+  id?: number
+  from_role: string
+  to_role: string
+  can_initiate: boolean
+  can_receive: boolean
+}
+
+interface User {
+  id: number
+  name: string
+  email: string
+  roles: string[]
+}
+
+interface RoleAssignment {
+  id: number
+  from_role: string
+  to_role: string
+  assigned_user_id: number
+  assigned_user: User
+  assigned_by: {
+    id: number
+    name: string
+  } | null
+  created_at: string
+}
+
+interface Props {
+  roles: Role[]
+  permissions: Permission[]
+  roleAssignments: RoleAssignment[]
+  allUsers: User[]
+}
+
+const props = defineProps<Props>()
+
+// State
+const loading = ref(false)
+const saving = ref(false)
+const localPermissions = ref<Permission[]>([...props.permissions])
+const selectedRole = ref<string>('')
+const showMatrix = ref(true)
+
+// Role assignment state
+const localRoleAssignments = ref<RoleAssignment[]>([...props.roleAssignments])
+const selectedFromRole = ref<string>('')
+const selectedToRole = ref<string>('')
+const selectedUser = ref<number | null>(null)
+const addingAssignment = ref(false)
+
+// Computed
+const roleNames = computed(() => props.roles.map(r => r.name))
+
+const permissionMatrix = computed(() => {
+  const matrix: Record<string, Record<string, { can_initiate: boolean; can_receive: boolean }>> = {}
+  
+  roleNames.value.forEach(fromRole => {
+    matrix[fromRole] = {}
+    roleNames.value.forEach(toRole => {
+      const perm = localPermissions.value.find(
+        p => p.from_role === fromRole && p.to_role === toRole
+      )
+      matrix[fromRole][toRole] = {
+        can_initiate: perm?.can_initiate || false,
+        can_receive: perm?.can_receive || false,
+      }
+    })
+  })
+  
+  return matrix
+})
+
+const hasChanges = computed(() => {
+  return JSON.stringify(localPermissions.value) !== JSON.stringify(props.permissions)
+})
+
+// Breadcrumbs
+const breadcrumbs: BreadcrumbItem[] = [
+  {
+    title: 'Dashboard',
+    href: '/dashboard',
+  },
+  {
+    title: 'Chat Permission Settings',
+    href: '/chat/permission-settings',
+  },
+]
+
+// Methods
+const canChat = (fromRole: string, toRole: string): boolean => {
+  return permissionMatrix.value[fromRole]?.[toRole]?.can_initiate && 
+         permissionMatrix.value[toRole]?.[fromRole]?.can_receive
+}
+
+const toggleChat = (fromRole: string, toRole: string) => {
+  const currentlyEnabled = canChat(fromRole, toRole)
+  
+  // Update both directions
+  updatePermission(fromRole, toRole, !currentlyEnabled, !currentlyEnabled)
+  updatePermission(toRole, fromRole, !currentlyEnabled, !currentlyEnabled)
+}
+
+const updatePermission = (fromRole: string, toRole: string, canInitiate: boolean, canReceive: boolean) => {
+  const index = localPermissions.value.findIndex(
+    p => p.from_role === fromRole && p.to_role === toRole
+  )
+  
+  if (index !== -1) {
+    localPermissions.value[index].can_initiate = canInitiate
+    localPermissions.value[index].can_receive = canReceive
+  } else {
+    localPermissions.value.push({
+      from_role: fromRole,
+      to_role: toRole,
+      can_initiate: canInitiate,
+      can_receive: canReceive,
+    })
+  }
+}
+
+const saveChanges = async () => {
+  saving.value = true
+  
+  try {
+    await window.axios.post('/chat/permission-settings/permissions/bulk', {
+      permissions: localPermissions.value,
+    })
+    
+    alert('✅ Chat permissions updated successfully!')
+    console.log('Chat permissions updated successfully')
+    
+    // Reload page to get fresh data
+    router.reload({ only: ['permissions'] })
+  } catch (error: any) {
+    console.error('Error saving permissions:', error)
+    alert('❌ Failed to save permissions: ' + (error.response?.data?.message || 'Unknown error'))
+  } finally {
+    saving.value = false
+  }
+}
+
+const resetToDefaults = async () => {
+  if (!confirm('Are you sure you want to reset all chat permissions to defaults? This will overwrite all custom settings.')) {
+    return
+  }
+  
+  loading.value = true
+  
+  try {
+    await window.axios.post('/chat/permission-settings/reset')
+    
+    alert('✅ Chat permissions reset to defaults successfully!')
+    console.log('Chat permissions reset to defaults')
+    
+    // Reload page
+    router.reload()
+  } catch (error: any) {
+    console.error('Error resetting permissions:', error)
+    alert('❌ Failed to reset permissions: ' + (error.response?.data?.message || 'Unknown error'))
+  } finally {
+    loading.value = false
+  }
+}
+
+const discardChanges = () => {
+  localPermissions.value = [...props.permissions]
+  console.log('Changes discarded')
+}
+
+const getRoleColor = (role: string): string => {
+  const colors: Record<string, string> = {
+    'super-admin': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+    'admin': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+    'manager': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+    'user': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+    'viewer': 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200',
+  }
+  return colors[role.toLowerCase()] || 'bg-gray-100 text-gray-800'
+}
+
+const enableAllForRole = (role: string) => {
+  roleNames.value.forEach(toRole => {
+    updatePermission(role, toRole, true, true)
+    updatePermission(toRole, role, true, true)
+  })
+}
+
+const disableAllForRole = (role: string) => {
+  roleNames.value.forEach(toRole => {
+    if (role !== toRole) { // Don't disable self-chat completely
+      updatePermission(role, toRole, false, false)
+      updatePermission(toRole, role, false, false)
+    }
+  })
+}
+
+// Role assignment management functions
+const addRoleAssignment = async () => {
+  if (!selectedFromRole.value || !selectedToRole.value || !selectedUser.value) {
+    alert('Please select from role, to role, and a user')
+    return
+  }
+  
+  addingAssignment.value = true
+  
+  try {
+    const response = await window.axios.post('/chat/permission-settings/assignments', {
+      from_role: selectedFromRole.value,
+      to_role: selectedToRole.value,
+      assigned_user_id: selectedUser.value,
+    })
+    
+    localRoleAssignments.value.push(response.data.assignment)
+    selectedFromRole.value = ''
+    selectedToRole.value = ''
+    selectedUser.value = null
+    
+    alert('✅ Role assignment created successfully!')
+    console.log('Assignment created:', response.data.assignment)
+  } catch (error: any) {
+    console.error('Error creating assignment:', error)
+    alert('❌ Failed to create assignment: ' + (error.response?.data?.message || 'Unknown error'))
+  } finally {
+    addingAssignment.value = false
+  }
+}
+
+const deleteRoleAssignment = async (assignmentId: number) => {
+  if (!confirm('Are you sure you want to remove this role assignment?')) {
+    return
+  }
+  
+  try {
+    await window.axios.delete(`/chat/permission-settings/assignments/${assignmentId}`)
+    
+    localRoleAssignments.value = localRoleAssignments.value.filter(a => a.id !== assignmentId)
+    
+    alert('✅ Role assignment deleted successfully!')
+    console.log('Assignment deleted')
+  } catch (error: any) {
+    console.error('Error deleting assignment:', error)
+    alert('❌ Failed to delete assignment: ' + (error.response?.data?.message || 'Unknown error'))
+  }
+}
+
+// Get users with a specific role
+const getUsersWithRole = (roleName: string) => {
+  return props.allUsers.filter(user => user.roles.includes(roleName))
+}
+
+// Get assigned users for a role combination
+const getAssignedUsers = (fromRole: string, toRole: string) => {
+  return localRoleAssignments.value
+    .filter(a => a.from_role === fromRole && a.to_role === toRole)
+    .map(a => a.assigned_user)
+}
+
+// Group assignments by from_role -> to_role
+const assignmentsByRolePair = computed(() => {
+  const grouped: Record<string, RoleAssignment[]> = {}
+  
+  localRoleAssignments.value.forEach(assignment => {
+    const key = `${assignment.from_role} → ${assignment.to_role}`
+    if (!grouped[key]) {
+      grouped[key] = []
+    }
+    grouped[key].push(assignment)
+  })
+  
+  return grouped
+})
+</script>
+
+<template>
+  <AppLayout :breadcrumbs="breadcrumbs">
+    <Head title="Chat Permission Settings" />
+
+    <div class="py-8">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="mb-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+                Chat Permission Settings
+              </h1>
+              <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                Configure which roles can initiate conversations with each other
+              </p>
+            </div>
+            
+            <div class="flex items-center gap-3">
+              <button
+                v-if="hasChanges"
+                @click="discardChanges"
+                class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700"
+              >
+                Discard Changes
+              </button>
+              
+              <button
+                v-if="hasChanges"
+                @click="saveChanges"
+                :disabled="saving"
+                class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span v-if="saving">Saving...</span>
+                <span v-else>Save Changes</span>
+              </button>
+              
+              <button
+                @click="resetToDefaults"
+                :disabled="loading"
+                class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span v-if="loading">Resetting...</span>
+                <span v-else>Reset to Defaults</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Info Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Roles</p>
+                <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ roles.length }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Active Permissions</p>
+                <p class="text-2xl font-bold text-gray-900 dark:text-white">
+                  {{ localPermissions.filter((p: Permission) => p.can_initiate && p.can_receive).length }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <svg class="w-8 h-8 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Unsaved Changes</p>
+                <p class="text-2xl font-bold text-gray-900 dark:text-white">
+                  {{ hasChanges ? 'Yes' : 'No' }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Role Legend -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Roles</h3>
+          <div class="flex flex-wrap gap-3">
+            <div 
+              v-for="role in roles" 
+              :key="role.id"
+              class="flex items-center gap-2"
+            >
+              <span :class="['px-3 py-1 rounded-full text-sm font-medium', getRoleColor(role.name)]">
+                {{ role.name }}
+              </span>
+              <span class="text-sm text-gray-500 dark:text-gray-400">
+                ({{ role.users_count }} {{ role.users_count === 1 ? 'user' : 'users' }})
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Permission Matrix -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+          <div class="p-6">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                Chat Permission Matrix
+              </h3>
+              <div class="text-sm text-gray-500 dark:text-gray-400">
+                Click to toggle chat permission between roles
+              </div>
+            </div>
+
+            <!-- Matrix Table -->
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead>
+                  <tr>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider sticky left-0 bg-gray-50 dark:bg-gray-900">
+                      From \ To
+                    </th>
+                    <th 
+                      v-for="role in roleNames" 
+                      :key="role"
+                      class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                    >
+                      <div class="flex flex-col items-center gap-1">
+                        <span>{{ role }}</span>
+                        <div class="flex gap-1">
+                          <button
+                            @click.stop="enableAllForRole(role)"
+                            class="px-2 py-0.5 text-xs text-green-700 bg-green-100 rounded hover:bg-green-200 dark:bg-green-900 dark:text-green-200"
+                            title="Enable all"
+                          >
+                            ✓
+                          </button>
+                          <button
+                            @click.stop="disableAllForRole(role)"
+                            class="px-2 py-0.5 text-xs text-red-700 bg-red-100 rounded hover:bg-red-200 dark:bg-red-900 dark:text-red-200"
+                            title="Disable all"
+                          >
+                            ✗
+                          </button>
+                        </div>
+                      </div>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                  <tr v-for="fromRole in roleNames" :key="fromRole">
+                    <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white sticky left-0 bg-gray-50 dark:bg-gray-900">
+                      <span :class="['px-2 py-1 rounded text-xs font-medium', getRoleColor(fromRole)]">
+                        {{ fromRole }}
+                      </span>
+                    </td>
+                    <td 
+                      v-for="toRole in roleNames" 
+                      :key="toRole"
+                      class="px-4 py-3 whitespace-nowrap text-center"
+                    >
+                      <button
+                        @click="toggleChat(fromRole, toRole)"
+                        :class="[
+                          'w-10 h-10 rounded-lg transition-all duration-200 flex items-center justify-center mx-auto',
+                          canChat(fromRole, toRole)
+                            ? 'bg-green-500 hover:bg-green-600 text-white'
+                            : 'bg-red-500 hover:bg-red-600 text-white',
+                          fromRole === toRole ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                        ]"
+                        :disabled="fromRole === toRole"
+                        :title="canChat(fromRole, toRole) ? 'Click to disable' : 'Click to enable'"
+                      >
+                        <svg v-if="canChat(fromRole, toRole)" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                        </svg>
+                        <svg v-else class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Role-to-Role Assignments Section -->
+        <div class="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+          <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+              Role-to-Role User Assignments
+            </h2>
+            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+              Assign specific users to handle communications from one role to another
+            </p>
+          </div>
+
+          <div class="p-6">
+            <!-- Add Assignment Form -->
+            <div class="mb-6 bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4">
+              <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-3">
+                Add New Role Assignment
+              </h3>
+              <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    From Role (Initiator)
+                  </label>
+                  <select
+                    v-model="selectedFromRole"
+                    class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  >
+                    <option value="">Choose role...</option>
+                    <option v-for="role in roleNames" :key="role" :value="role">
+                      {{ role }}
+                    </option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    To Role (Target)
+                  </label>
+                  <select
+                    v-model="selectedToRole"
+                    class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  >
+                    <option value="">Choose role...</option>
+                    <option v-for="role in roleNames" :key="role" :value="role">
+                      {{ role }}
+                    </option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Assigned User
+                  </label>
+                  <select
+                    v-model="selectedUser"
+                    :disabled="!selectedToRole"
+                    class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50"
+                  >
+                    <option :value="null">Choose user...</option>
+                    <option 
+                      v-for="user in getUsersWithRole(selectedToRole || '')" 
+                      :key="user.id" 
+                      :value="user.id"
+                    >
+                      {{ user.name }}
+                    </option>
+                  </select>
+                  <p v-if="selectedToRole" class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    Only users with "{{ selectedToRole }}" role
+                  </p>
+                </div>
+
+                <div class="flex items-end">
+                  <button
+                    @click="addRoleAssignment"
+                    :disabled="!selectedFromRole || !selectedToRole || !selectedUser || addingAssignment"
+                    class="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-md transition-colors duration-200 font-medium"
+                  >
+                    <span v-if="addingAssignment">Adding...</span>
+                    <span v-else>Add Assignment</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Assignments List -->
+            <div v-if="localRoleAssignments.length > 0">
+              <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-3">
+                Current Assignments ({{ localRoleAssignments.length }})
+              </h3>
+              <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                  <thead class="bg-gray-50 dark:bg-gray-900">
+                    <tr>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        From Role
+                      </th>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        To Role
+                      </th>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Assigned User
+                      </th>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        User's Roles
+                      </th>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Assigned By
+                      </th>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Created At
+                      </th>
+                      <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    <tr v-for="assignment in localRoleAssignments" :key="assignment.id">
+                      <td class="px-4 py-3 whitespace-nowrap">
+                        <span :class="['px-2 py-1 rounded text-xs font-medium', getRoleColor(assignment.from_role)]">
+                          {{ assignment.from_role }}
+                        </span>
+                      </td>
+                      <td class="px-4 py-3 whitespace-nowrap">
+                        <span :class="['px-2 py-1 rounded text-xs font-medium', getRoleColor(assignment.to_role)]">
+                          {{ assignment.to_role }}
+                        </span>
+                      </td>
+                      <td class="px-4 py-3 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900 dark:text-white">
+                          {{ assignment.assigned_user.name }}
+                        </div>
+                        <div class="text-sm text-gray-500 dark:text-gray-400">
+                          {{ assignment.assigned_user.email }}
+                        </div>
+                      </td>
+                      <td class="px-4 py-3 whitespace-nowrap">
+                        <div class="flex flex-wrap gap-1">
+                          <span
+                            v-for="role in assignment.assigned_user.roles"
+                            :key="role"
+                            :class="['px-2 py-1 rounded text-xs font-medium', getRoleColor(role)]"
+                          >
+                            {{ role }}
+                          </span>
+                        </div>
+                      </td>
+                      <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                        {{ assignment.assigned_by?.name || 'System' }}
+                      </td>
+                      <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                        {{ new Date(assignment.created_at).toLocaleDateString() }}
+                      </td>
+                      <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
+                        <button
+                          @click="deleteRoleAssignment(assignment.id)"
+                          class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Empty State -->
+            <div v-else class="text-center py-8 text-gray-500 dark:text-gray-400">
+              <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+              <p class="mt-2">No role assignments yet</p>
+              <p class="text-sm">Add assignments above to designate specific users to handle role-to-role communications</p>
+            </div>
+
+            <!-- Assignment Info -->
+            <div class="mt-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+              <div class="flex">
+                <svg class="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                </svg>
+                <div class="ml-3">
+                  <h3 class="text-sm font-medium text-yellow-800 dark:text-yellow-200">How Role-to-Role Assignments Work</h3>
+                  <div class="mt-2 text-sm text-yellow-700 dark:text-yellow-300">
+                    <ul class="list-disc list-inside space-y-1">
+                      <li><strong>Example:</strong> ALL doctors want to talk to admin → Assign "Admin User 1" and "Admin User 2"</li>
+                      <li><strong>Result:</strong> Every user with "doctor" role will see only these 2 assigned admins in their chat</li>
+                      <li>These assignments designate which specific users handle requests from an entire role</li>
+                      <li>You can assign multiple users to the same role combination</li>
+                      <li>The assigned user MUST have the target role</li>
+                      <li>These assignments work IN ADDITION to the role-based permissions above</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Help Text -->
+        <div class="mt-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+          <div class="flex">
+            <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+            </svg>
+            <div class="ml-3">
+              <h3 class="text-sm font-medium text-blue-800 dark:text-blue-200">How it works</h3>
+              <div class="mt-2 text-sm text-blue-700 dark:text-blue-300">
+                <ul class="list-disc list-inside space-y-1">
+                  <li><strong>Green checkmark (✓)</strong>: Users with these roles CAN start conversations with each other</li>
+                  <li><strong>Red X (✗)</strong>: Users with these roles CANNOT start conversations with each other</li>
+                  <li>Click any cell to toggle the permission</li>
+                  <li>Use the ✓ / ✗ buttons at the top to quickly enable/disable all permissions for a role</li>
+                  <li>Changes are bidirectional - enabling chat from Role A to Role B also enables Role B to Role A</li>
+                  <li>Don't forget to click "Save Changes" to apply your modifications</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </AppLayout>
+</template>

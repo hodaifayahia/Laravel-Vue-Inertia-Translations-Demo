@@ -34,6 +34,11 @@ class SocialAuthController extends Controller
             return redirect()->route('login')->with('error', 'Unable to login with ' . ucfirst($provider) . '. Please try again.');
         }
 
+        // Validate that we have an email
+        if (!$socialUser->getEmail()) {
+            return redirect()->route('login')->with('error', 'Unable to get email from ' . ucfirst($provider) . '. Please try again.');
+        }
+
         // Find or create user
         $user = User::where('email', $socialUser->getEmail())->first();
 

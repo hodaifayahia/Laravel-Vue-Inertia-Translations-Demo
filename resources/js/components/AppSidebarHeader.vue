@@ -3,6 +3,7 @@ import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import type { BreadcrumbItemType } from '@/types';
 import LocaleSelector from '@/components/LocaleSelector.vue';
+import NotificationBell from '@/components/NotificationBell.vue';
 
 withDefaults(
     defineProps<{
@@ -25,7 +26,10 @@ withDefaults(
                     <Breadcrumbs :breadcrumbs="breadcrumbs" />
                 </template>
             </div>
-            <LocaleSelector />
+            <div class="flex items-center gap-2">
+                <NotificationBell />
+                <LocaleSelector />
+            </div>
         </div>
     </header>
 </template>

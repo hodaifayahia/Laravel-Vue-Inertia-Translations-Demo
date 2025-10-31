@@ -47,7 +47,8 @@ const togglePasswordVisibility = () => {
         </div>
 
         <Form
-            v-bind="AuthenticatedSessionController.store.form()"
+            :action="AuthenticatedSessionController.store.url()"
+            method="post"
             :reset-on-success="['password']"
             v-slot="{ errors, processing }"
             class="space-y-6"
