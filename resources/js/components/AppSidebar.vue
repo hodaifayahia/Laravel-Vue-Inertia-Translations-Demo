@@ -21,6 +21,7 @@ import { BookOpen, Folder, LayoutGrid, Users, Shield, Key } from 'lucide-vue-nex
 import AppLogo from './AppLogo.vue';
 import { wTrans } from 'laravel-vue-i18n';
 import { computed, ref, onMounted, onUnmounted } from 'vue';
+import { usePermissions } from '@/composables/usePermissions';
 
 // Determine sidebar side based on language direction
 // Watch for changes in the HTML dir attribute which changes when language changes
@@ -52,28 +53,41 @@ onUnmounted(() => {
     }
 });
 
-const mainNavItems: NavItem[] = [
+// Get permissions
+const { hasPermission } = usePermissions();
+
+// Define all possible nav items with their required permissions
+const allNavItems = [
     {
         title: wTrans('sidebar.dashboard'),
         href: dashboard(),
         icon: LayoutGrid,
+        permission: 'view dashboard sidebar',
     },
     {
         title: wTrans('sidebar.users'),
         href: usersRoutes.index(),
         icon: Users,
+        permission: 'view users sidebar',
     },
     {
         title: wTrans('sidebar.roles'),
         href: rolesRoutes.index(),
         icon: Shield,
+        permission: 'view roles sidebar',
     },
     {
         title: wTrans('sidebar.permissions'),
         href: permissionsRoutes.index(),
         icon: Key,
+        permission: 'view permissions sidebar',
     },
 ];
+
+// Filter nav items based on user permissions
+const mainNavItems = computed(() => 
+    allNavItems.filter(item => hasPermission(item.permission))
+);
 
 const footerNavItems: NavItem[] = [
     {
@@ -104,7 +118,7 @@ const footerNavItems: NavItem[] = [
         </SidebarHeader>
 
         <SidebarContent>
-            <NavMain :items="mainNavItems" />
+            <NavMain :items="mainNavItems" v-if="mainNavItems.length > 0" />
         </SidebarContent>
 
         <SidebarFooter>

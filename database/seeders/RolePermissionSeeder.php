@@ -37,6 +37,12 @@ class RolePermissionSeeder extends Seeder
             
             // Dashboard
             'view dashboard',
+            
+            // Sidebar access permissions
+            'view dashboard sidebar',
+            'view users sidebar',
+            'view roles sidebar',
+            'view permissions sidebar',
         ];
 
         foreach ($permissions as $permission) {
@@ -65,12 +71,24 @@ class RolePermissionSeeder extends Seeder
             'view users',
             'edit users',
             'view dashboard',
+            'view dashboard sidebar',
+            'view users sidebar',
         ]);
 
         // User - basic permissions
         $user = Role::firstOrCreate(['name' => 'user']);
         $user->givePermissionTo([
             'view dashboard',
+            'view dashboard sidebar',
+        ]);
+        
+        // Viewer - can only view users (no edit/create/delete)
+        $viewer = Role::firstOrCreate(['name' => 'viewer']);
+        $viewer->givePermissionTo([
+            'view users',
+            'view dashboard',
+            'view dashboard sidebar',
+            'view users sidebar',
         ]);
 
         // Assign super-admin role to the first user if exists

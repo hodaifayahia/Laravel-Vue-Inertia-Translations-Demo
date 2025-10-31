@@ -12,12 +12,12 @@ defineProps<{
 
 <template>
     <div class="relative flex min-h-screen w-full">
-        <!-- Left Side - Form -->
+        <!-- Form Side - Left in LTR, Right in RTL -->
         <div
             class="relative z-10 flex w-full flex-col items-center justify-center bg-background px-6 py-12 lg:w-1/2 lg:px-12"
         >
-            <!-- Theme Toggle - Top Right -->
-            <div class="absolute top-6 right-6">
+            <!-- Theme Toggle - Top Right in LTR, Top Left in RTL -->
+            <div class="absolute top-6 ltr:right-6 rtl:left-6">
                 <ThemeToggle />
             </div>
 
@@ -58,9 +58,9 @@ defineProps<{
             </div>
         </div>
 
-        <!-- Right Side - Gradient Background with Animation -->
+        <!-- Features Side - Right in LTR, Left in RTL -->
         <div
-            class="fixed right-0 top-0 hidden h-full w-1/2 overflow-hidden lg:block"
+            class="fixed top-0 hidden h-full w-1/2 overflow-hidden ltr:right-0 rtl:left-0 lg:block"
         >
             <!-- Animated Gradient Background -->
             <div
@@ -84,12 +84,10 @@ defineProps<{
             >
                 <div class="max-w-lg text-center">
                     <h2 class="mb-6 text-4xl font-bold leading-tight">
-                        Welcome to Our Platform
+                        {{ $t('auth.welcome_title') }}
                     </h2>
                     <p class="mb-8 text-lg text-white/90">
-                        Build amazing applications with modern tools and best
-                        practices. Join thousands of developers who trust our
-                        platform.
+                        {{ $t('auth.welcome_description') }}
                     </p>
 
                     <!-- Features -->
@@ -109,9 +107,9 @@ defineProps<{
                                 />
                             </svg>
                             <div>
-                                <h3 class="font-semibold">Secure & Reliable</h3>
+                                <h3 class="font-semibold">{{ $t('auth.feature_secure_title') }}</h3>
                                 <p class="text-sm text-white/80">
-                                    Enterprise-grade security with 99.9% uptime
+                                    {{ $t('auth.feature_secure_description') }}
                                 </p>
                             </div>
                         </div>
@@ -130,9 +128,9 @@ defineProps<{
                                 />
                             </svg>
                             <div>
-                                <h3 class="font-semibold">Easy to Use</h3>
+                                <h3 class="font-semibold">{{ $t('auth.feature_easy_title') }}</h3>
                                 <p class="text-sm text-white/80">
-                                    Intuitive interface designed for productivity
+                                    {{ $t('auth.feature_easy_description') }}
                                 </p>
                             </div>
                         </div>
@@ -151,9 +149,9 @@ defineProps<{
                                 />
                             </svg>
                             <div>
-                                <h3 class="font-semibold">24/7 Support</h3>
+                                <h3 class="font-semibold">{{ $t('auth.feature_support_title') }}</h3>
                                 <p class="text-sm text-white/80">
-                                    Our team is always here to help you succeed
+                                    {{ $t('auth.feature_support_description') }}
                                 </p>
                             </div>
                         </div>

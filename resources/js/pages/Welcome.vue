@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import LocaleSelector from '@/components/LocaleSelector.vue';
 import ThemeToggle from '@/components/ThemeToggle.vue';
 import { dashboard, login, register } from '@/routes';
 import { Head, Link } from '@inertiajs/vue3';
@@ -40,6 +41,7 @@ import {
                 </div>
 
                 <div class="flex items-center gap-3">
+                    <LocaleSelector />
                     <ThemeToggle />
                     <Link
                         v-if="$page.props.auth.user"
@@ -88,34 +90,32 @@ import {
                     <!-- Trust Badge -->
                     <div class="mb-8 inline-flex items-center gap-2 rounded-full border border-border bg-muted/50 px-4 py-2 text-sm backdrop-blur-sm">
                         <Star class="h-4 w-4 fill-yellow-500 text-yellow-500" />
-                        <span class="font-medium">Trusted by 10,000+ developers worldwide</span>
+                        <span class="font-medium">{{ $t('welcome.trusted_by') }}</span>
                     </div>
 
                     <!-- Main Heading -->
                     <h1
                         class="mb-6 bg-gradient-to-r from-foreground via-foreground to-foreground/70 bg-clip-text text-5xl font-bold leading-tight tracking-tight text-transparent md:text-7xl animate-fade-in"
                     >
-                        Build Amazing Applications with Modern Tools
+                        {{ $t('welcome.hero_title') }}
                     </h1>
 
                     <!-- Subheading -->
                     <p
                         class="mb-10 text-lg text-muted-foreground md:text-xl animate-fade-in-delay"
                     >
-                        The perfect starting point for your next project. Built
-                        with Laravel, Vue, and Inertia.js for the ultimate
-                        developer experience.
+                        {{ $t('welcome.hero_subtitle') }}
                     </p>
 
                     <!-- CTA Buttons -->
                     <div class="flex flex-col items-center justify-center gap-4 sm:flex-row animate-fade-in-delay-2">
-                        <Link
+                                                <Link
                             v-if="!$page.props.auth.user"
                             :href="register()"
                             class="group inline-flex h-14 items-center justify-center gap-2 rounded-lg bg-primary px-8 text-base font-semibold text-primary-foreground shadow-lg transition-all hover:scale-105 hover:bg-primary/90 hover:shadow-xl"
                         >
                             <Rocket class="h-5 w-5" />
-                            Get Started Free
+                            {{ $t('welcome.get_started_free') }}
                             <ArrowRight
                                 class="h-5 w-5 transition-transform group-hover:translate-x-1"
                             />
@@ -125,7 +125,7 @@ import {
                             :href="dashboard()"
                             class="group inline-flex h-14 items-center justify-center gap-2 rounded-lg bg-primary px-8 text-base font-semibold text-primary-foreground shadow-lg transition-all hover:scale-105 hover:bg-primary/90 hover:shadow-xl"
                         >
-                            Go to Dashboard
+                            {{ $t('welcome.go_to_dashboard') }}
                             <ArrowRight
                                 class="h-5 w-5 transition-transform group-hover:translate-x-1"
                             />
@@ -135,7 +135,7 @@ import {
                             target="_blank"
                             class="inline-flex h-14 items-center justify-center gap-2 rounded-lg border-2 border-border bg-background px-8 text-base font-semibold transition-all hover:bg-accent hover:border-foreground/20"
                         >
-                            View Documentation
+                            {{ $t('welcome.view_documentation') }}
                         </a>
                     </div>
 
@@ -143,15 +143,15 @@ import {
                     <div class="mt-12 flex items-center justify-center gap-8 text-sm text-muted-foreground">
                         <div class="flex items-center gap-2">
                             <CheckCircle2 class="h-4 w-4 text-green-500" />
-                            <span>No credit card required</span>
+                            <span>{{ $t('welcome.no_credit_card') }}</span>
                         </div>
                         <div class="flex items-center gap-2">
                             <CheckCircle2 class="h-4 w-4 text-green-500" />
-                            <span>Free forever</span>
+                            <span>{{ $t('welcome.free_forever') }}</span>
                         </div>
                         <div class="hidden sm:flex items-center gap-2">
                             <CheckCircle2 class="h-4 w-4 text-green-500" />
-                            <span>Setup in 5 minutes</span>
+                            <span>{{ $t('welcome.setup_in_minutes') }}</span>
                         </div>
                     </div>
                 </div>
@@ -161,10 +161,10 @@ import {
         <!-- Features Section -->
         <section class="py-20 bg-muted/30">
             <div class="container mx-auto px-4">
-                <div class="mb-16 text-center">
-                    <h2 class="mb-4 text-4xl font-bold">Why Choose Us?</h2>
+                                <div class="mb-16 text-center">
+                    <h2 class="mb-4 text-4xl font-bold">{{ $t('welcome.why_choose_us') }}</h2>
                     <p class="text-lg text-muted-foreground">
-                        Everything you need to build modern web applications
+                        {{ $t('welcome.features_subtitle') }}
                     </p>
                 </div>
 
@@ -180,10 +180,9 @@ import {
                         >
                             <Zap class="h-7 w-7" />
                         </div>
-                        <h3 class="mb-3 text-xl font-bold">Lightning Fast</h3>
+                        <h3 class="mb-3 text-xl font-bold">{{ $t('welcome.feature_fast_title') }}</h3>
                         <p class="text-muted-foreground">
-                            Built with performance in mind. Experience blazing
-                            fast page loads and smooth interactions.
+                            {{ $t('welcome.feature_fast_description') }}
                         </p>
                         <div class="absolute bottom-0 left-0 h-1 w-0 bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-300 group-hover:w-full"></div>
                     </div>
@@ -196,9 +195,9 @@ import {
                         >
                             <Shield class="h-7 w-7" />
                         </div>
-                        <h3 class="mb-3 text-xl font-bold">Secure by Default</h3>
+                        <h3 class="mb-3 text-xl font-bold">{{ $t('welcome.feature_secure_title') }}</h3>
                         <p class="text-muted-foreground">
-                            Enterprise-grade security with authentication, authorization, and encrypted data.
+                            {{ $t('welcome.feature_secure_description') }}
                         </p>
                         <div class="absolute bottom-0 left-0 h-1 w-0 bg-gradient-to-r from-green-500 to-green-600 transition-all duration-300 group-hover:w-full"></div>
                     </div>
@@ -211,9 +210,9 @@ import {
                         >
                             <Users class="h-7 w-7" />
                         </div>
-                        <h3 class="mb-3 text-xl font-bold">User Management</h3>
+                        <h3 class="mb-3 text-xl font-bold">{{ $t('welcome.feature_users_title') }}</h3>
                         <p class="text-muted-foreground">
-                            Complete user management system with roles, permissions, and profiles built-in.
+                            {{ $t('welcome.feature_users_description') }}
                         </p>
                         <div class="absolute bottom-0 left-0 h-1 w-0 bg-gradient-to-r from-purple-500 to-purple-600 transition-all duration-300 group-hover:w-full"></div>
                     </div>
@@ -226,9 +225,9 @@ import {
                         >
                             <Code class="h-7 w-7" />
                         </div>
-                        <h3 class="mb-3 text-xl font-bold">Modern Stack</h3>
+                        <h3 class="mb-3 text-xl font-bold">{{ $t('welcome.feature_stack_title') }}</h3>
                         <p class="text-muted-foreground">
-                            Laravel, Vue 3, Inertia.js, and Tailwind CSS. The best tools for modern development.
+                            {{ $t('welcome.feature_stack_description') }}
                         </p>
                         <div class="absolute bottom-0 left-0 h-1 w-0 bg-gradient-to-r from-orange-500 to-orange-600 transition-all duration-300 group-hover:w-full"></div>
                     </div>
@@ -241,9 +240,9 @@ import {
                         >
                             <Globe class="h-7 w-7" />
                         </div>
-                        <h3 class="mb-3 text-xl font-bold">Internationalization</h3>
+                        <h3 class="mb-3 text-xl font-bold">{{ $t('welcome.feature_i18n_title') }}</h3>
                         <p class="text-muted-foreground">
-                            Multi-language support built-in. Reach a global audience with ease.
+                            {{ $t('welcome.feature_i18n_description') }}
                         </p>
                         <div class="absolute bottom-0 left-0 h-1 w-0 bg-gradient-to-r from-pink-500 to-pink-600 transition-all duration-300 group-hover:w-full"></div>
                     </div>
@@ -256,9 +255,9 @@ import {
                         >
                             <Layers class="h-7 w-7" />
                         </div>
-                        <h3 class="mb-3 text-xl font-bold">Scalable Architecture</h3>
+                        <h3 class="mb-3 text-xl font-bold">{{ $t('welcome.feature_scalable_title') }}</h3>
                         <p class="text-muted-foreground">
-                            Clean, maintainable code structure that scales with your business needs.
+                            {{ $t('welcome.feature_scalable_description') }}
                         </p>
                         <div class="absolute bottom-0 left-0 h-1 w-0 bg-gradient-to-r from-cyan-500 to-cyan-600 transition-all duration-300 group-hover:w-full"></div>
                     </div>
@@ -274,25 +273,25 @@ import {
                         <div class="mb-2 text-5xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent transition-transform duration-300 group-hover:scale-110">
                             10K+
                         </div>
-                        <div class="text-muted-foreground font-medium">Active Users</div>
+                        <div class="text-muted-foreground font-medium">{{ $t('welcome.active_users') }}</div>
                     </div>
                     <div class="text-center group">
                         <div class="mb-2 text-5xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent transition-transform duration-300 group-hover:scale-110">
                             99.9%
                         </div>
-                        <div class="text-muted-foreground font-medium">Uptime</div>
+                        <div class="text-muted-foreground font-medium">{{ $t('welcome.uptime') }}</div>
                     </div>
                     <div class="text-center group">
                         <div class="mb-2 text-5xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent transition-transform duration-300 group-hover:scale-110">
                             24/7
                         </div>
-                        <div class="text-muted-foreground font-medium">Support</div>
+                        <div class="text-muted-foreground font-medium">{{ $t('welcome.support') }}</div>
                     </div>
                     <div class="text-center group">
                         <div class="mb-2 text-5xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent transition-transform duration-300 group-hover:scale-110">
                             500+
                         </div>
-                        <div class="text-muted-foreground font-medium">Projects</div>
+                        <div class="text-muted-foreground font-medium">{{ $t('welcome.projects') }}</div>
                     </div>
                 </div>
             </div>
@@ -319,14 +318,13 @@ import {
                     <div class="relative z-10">
                         <div class="mb-4 inline-flex items-center justify-center rounded-full bg-primary/10 px-4 py-2">
                             <Heart class="h-4 w-4 mr-2 text-red-500 fill-red-500" />
-                            <span class="text-sm font-medium">Join our community</span>
+                            <span class="text-sm font-medium">{{ $t('welcome.join_community') }}</span>
                         </div>
                         <h2 class="mb-4 text-4xl font-bold md:text-5xl">
-                            Ready to Get Started?
+                            {{ $t('welcome.ready_to_start') }}
                         </h2>
                         <p class="mb-8 text-lg text-muted-foreground max-w-2xl mx-auto">
-                            Join thousands of developers building amazing
-                            applications today. No credit card required.
+                            {{ $t('welcome.cta_description') }}
                         </p>
                         <div class="flex flex-col items-center justify-center gap-4 sm:flex-row">
                             <Link
@@ -335,7 +333,7 @@ import {
                                 class="group inline-flex h-14 items-center justify-center gap-2 rounded-lg bg-primary px-8 text-base font-semibold text-primary-foreground shadow-lg transition-all hover:scale-105 hover:bg-primary/90 hover:shadow-xl"
                             >
                                 <Rocket class="h-5 w-5" />
-                                Start Building Now
+                                {{ $t('welcome.start_building_now') }}
                                 <ArrowRight
                                     class="h-5 w-5 transition-transform group-hover:translate-x-1"
                                 />
@@ -345,7 +343,7 @@ import {
                                 :href="dashboard()"
                                 class="group inline-flex h-14 items-center justify-center gap-2 rounded-lg bg-primary px-8 text-base font-semibold text-primary-foreground shadow-lg transition-all hover:scale-105 hover:bg-primary/90 hover:shadow-xl"
                             >
-                                Open Dashboard
+                                {{ $t('welcome.open_dashboard') }}
                                 <ArrowRight
                                     class="h-5 w-5 transition-transform group-hover:translate-x-1"
                                 />
@@ -371,8 +369,7 @@ import {
                         }}</span>
                     </div>
                     <div class="text-sm text-muted-foreground">
-                        © 2025 All rights reserved. Built with <Heart class="inline h-4 w-4 text-red-500 fill-red-500" /> using Laravel
-                        & Vue
+                        {{ $t('welcome.all_rights_reserved') }} <Heart class="inline h-4 w-4 text-red-500 fill-red-500" /> {{ $t('welcome.using_laravel_vue') }}
                     </div>
                     <div class="flex gap-6">
                         <a
@@ -380,14 +377,14 @@ import {
                             target="_blank"
                             class="text-sm text-muted-foreground transition-colors hover:text-foreground"
                         >
-                            Documentation
+                            {{ $t('welcome.documentation') }}
                         </a>
                         <a
                             href="https://github.com"
                             target="_blank"
                             class="text-sm text-muted-foreground transition-colors hover:text-foreground"
                         >
-                            GitHub
+                            {{ $t('welcome.github') }}
                         </a>
                     </div>
                 </div>

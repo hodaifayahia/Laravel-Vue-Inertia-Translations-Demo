@@ -32,4 +32,19 @@ return [
     
     'show_password' => 'إظهار كلمة المرور',
     'hide_password' => 'إخفاء كلمة المرور',
+
+    'or' => 'أو',
+    'continue_with' => 'المتابعة مع :provider',
+    'login_with_google' => 'المتابعة مع جوجل',
+    'login_with_facebook' => 'المتابعة مع فيسبوك',
+
+    // Auth layout
+    'welcome_title' => 'مرحباً بك في منصتنا',
+    'welcome_description' => 'قم ببناء تطبيقات رائعة باستخدام أدوات حديثة وأفضل الممارسات. انضم إلى آلاف المطورين الذين يثقون بمنصتنا.',
+    'feature_secure_title' => 'آمن وموثوق',
+    'feature_secure_description' => 'أمان على مستوى المؤسسات مع وقت تشغيل 99.9%',
+    'feature_easy_title' => 'سهل الاستخدام',
+    'feature_easy_description' => 'واجهة بديهية مصممة للإنتاجية',
+    'feature_support_title' => 'دعم 24/7',
+    'feature_support_description' => 'فريقنا هنا دائماً لمساعدتك على النجاح',
 ];

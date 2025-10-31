@@ -40,6 +40,7 @@ import CreateUserDialog from '@/components/CreateUserDialog.vue';
 import EditUserDialog from '@/components/EditUserDialog.vue';
 import DeleteUserDialog from '@/components/DeleteUserDialog.vue';
 import { useInitials } from '@/composables/useInitials';
+import { usePermissions } from '@/composables/usePermissions';
 import * as usersRoutes from '@/routes/users';
 
 interface UserData extends User {
@@ -67,12 +68,20 @@ interface Props {
 
 const props = defineProps<Props>();
 
+// Get permissions
+const { hasPermission } = usePermissions();
+
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: wTrans('users.title'),
         href: usersRoutes.index().url,
     },
 ];
+
+// Permission checks
+const canCreateUsers = computed(() => hasPermission('create users'));
+const canEditUsers = computed(() => hasPermission('edit users'));
+const canDeleteUsers = computed(() => hasPermission('delete users'));
 
 // Search and filters
 const searchQuery = ref(props.filters.search || '');
@@ -150,7 +159,11 @@ const getLocaleLabel = (locale: string) => {
                         {{ $t('users.description') }}
                     </p>
                 </div>
-                <Button @click="createDialogOpen = true" size="lg">
+                <Button 
+                    v-if="canCreateUsers" 
+                    @click="createDialogOpen = true" 
+                    size="lg"
+                >
                     <Plus class="mr-2 h-5 w-5" />
                     {{ $t('users.add_user') }}
                 </Button>
@@ -312,7 +325,7 @@ const getLocaleLabel = (locale: string) => {
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 text-right">
-                                        <DropdownMenu>
+                                        <DropdownMenu v-if="canEditUsers || canDeleteUsers">
                                             <DropdownMenuTrigger as-child>
                                                 <Button variant="ghost" size="sm">
                                                     <MoreVertical class="h-4 w-4" />
@@ -323,11 +336,15 @@ const getLocaleLabel = (locale: string) => {
                                                     {{ $t('users.actions') }}
                                                 </DropdownMenuLabel>
                                                 <DropdownMenuSeparator />
-                                                <DropdownMenuItem @click="handleEdit(user)">
+                                                <DropdownMenuItem 
+                                                    v-if="canEditUsers" 
+                                                    @click="handleEdit(user)"
+                                                >
                                                     <Edit class="mr-2 h-4 w-4" />
                                                     {{ $t('users.edit') }}
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem
+                                                    v-if="canDeleteUsers"
                                                     @click="handleDelete(user)"
                                                     class="text-destructive focus:text-destructive"
                                                 >
@@ -336,6 +353,7 @@ const getLocaleLabel = (locale: string) => {
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
+                                        <span v-else class="text-sm text-muted-foreground">-</span>
                                     </td>
                                 </tr>
                             </tbody>
@@ -351,7 +369,7 @@ const getLocaleLabel = (locale: string) => {
                             <p class="mb-4 text-sm text-muted-foreground">
                                 {{ $t('users.no_users_description') }}
                             </p>
-                            <Button @click="createDialogOpen = true">
+                            <Button v-if="canCreateUsers" @click="createDialogOpen = true">
                                 <Plus class="mr-2 h-4 w-4" />
                                 {{ $t('users.add_first_user') }}
                             </Button>
